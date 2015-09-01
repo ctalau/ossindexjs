@@ -1,0 +1,27 @@
+{
+  "name": "ossindexjs",
+  "version": "0.0.1",
+  "description": "OSS Index API for node.js",
+  "main": "ossindex.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OSSIndex/ossindexjs.git"
+  },
+  "keywords": [
+    "OSS",
+    "Index",
+    "API"
+  ],
+  "author": "Ken Duck <npm@ossindex.net> (http://ossindex.net)",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/OSSIndex/ossindexjs/issues"
+  },
+  "homepage": "https://github.com/OSSIndex/ossindexjs#readme",
+  "dependencies": {
+    "node-rest-client": "^1.5.1"
+  }
+}
