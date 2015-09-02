@@ -29,10 +29,10 @@
 var RestClient = require('node-rest-client').Client;
 
 //RELEASE HOST
-//var ossindex = "https://ossindex.net";
+var ossindex = "https://ossindex.net";
 
 //DEBUG HOST
-var ossindex = "http://localhost:8080";
+//var ossindex = "http://localhost:8080";
 
 //Instantiate the rest client
 var client = new RestClient();
@@ -40,7 +40,7 @@ var client = new RestClient();
 module.exports = {
 	/** GET /v1.0/search/artifact/npm/:name/:range
 	 * 
-	 * Return the artifact that best macthes the given package/range
+	 * Return the artifact that best matches the given package/range
 	 */
 	getNpmArtifact: function (name, version, callback) {
 		var query = ossindex + "/v1.0/search/artifact/npm/" + name + "/" + version;
@@ -60,6 +60,23 @@ module.exports = {
 	 */
 	getScm: function (scmId, callback) {
 		client.get(ossindex + "/v1.0/scm/" + scmId, function(data, response){
+			if(data != undefined) {
+				callback(undefined, data);
+			}
+			else {
+				callback();
+			}
+		});
+	},
+	
+	/** GET /v1.0/uri/:host/:path
+	 * 
+	 * Return the SCM details for the SCM with the specified OSS Index ID.
+	 */
+	getScmByUri: function (uri, callback) {
+		var index = uri.indexOf("://");
+		var uriHostPath = uri.substring(index + 3, uri.length);
+		client.get(ossindex + "/v1.0/uri/" + uriHostPath, function(data, response){
 			if(data != undefined) {
 				callback(undefined, data);
 			}
