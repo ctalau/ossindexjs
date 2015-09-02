@@ -38,6 +38,38 @@ var ossindex = "https://ossindex.net";
 var client = new RestClient();
 
 module.exports = {
+	
+	/**
+	 * Get artifacts in bulk. Currently this is not supported by the API,
+	 * so fake it for now.
+	 * 
+	 * If an artifact cannot be found it leaves a null in the result array
+	 * 
+	 * 
+	 */
+	getNpmArtifacts: function (names, versions, callback, results) {
+		var that = this;
+		if(results == undefined) {
+			results = [];
+			// Make sure we don't edit the original arrays
+			names = names.slice(0);
+			versions = versions.slice(0);
+		}
+		if(names.length == 0) {
+			callback(undefined, results);
+			return;
+		}
+		var name = names.shift();
+		var version = versions.shift();
+		this.getNpmArtifact(name, version, function(err, artifact) {
+			// Push bad results on as well (undefined). This allows
+			// the caller to determine which queries return good
+			// results.
+			results.push(artifact);
+			that.getNpmArtifacts(names, versions, callback, results);
+		});
+	},
+	
 	/** GET /v1.0/search/artifact/npm/:name/:range
 	 * 
 	 * Return the artifact that best matches the given package/range
@@ -58,8 +90,9 @@ module.exports = {
 	 * 
 	 * Return the SCM details for the SCM with the specified OSS Index ID.
 	 */
-	getScm: function (scmId, callback) {
-		client.get(ossindex + "/v1.0/scm/" + scmId, function(data, response){
+	getScms: function (scmIds, callback) {
+		var list = scmIds.join(",");
+		client.get(ossindex + "/v1.0/scm/" + list, function(data, response){
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -138,33 +171,6 @@ module.exports = {
 		});
 	},
 	
-	/** Given a list of CVE OSS Index IDs, return the details for the CVEs
-	 * 
-	 * Given a CVE list, get all of the details which includes but is not limited to
-	 */
-	getCveListDetails: function (cveIdList, callback, results) {
-		var that = this;
-		if(results == undefined) {
-			results = [];
-		}
-		if(cveIdList.length == 0) {
-			callback(undefined, results);
-		}
-		else {
-			var cveId = cveIdList.shift();
-			this.getCveDetails(cveId, function(err, details) {
-				if(err) {
-					callback(err);
-				}
-				if(details != undefined) {
-					results.push(details);
-				}
-				that.getCveListDetails(cveIdList, callback, results);
-			});
-		}
-	},
-	
-	
 	/** GET /v1.0/cve/:id
 	 * 
 	 * Given a CVE OSS Index ID, get all of the details which includes but
@@ -174,8 +180,17 @@ module.exports = {
 	 *   o Affected CPEs with versions
 	 *   o Reference information
 	 */
-	getCveDetails: function (cveId, callback) {
-		client.get(ossindex + "/v1.0/cve/" + cveId, function(data, response){
+	getCves: function (cveIdList, callback, results) {
+		var that = this;
+		if(results == undefined) {
+			results = [];
+		}
+		if(cveIdList.length == 0) {
+			callback(undefined, results);
+		}
+		
+		var ids = cveIdList.join(",");
+		client.get(ossindex + "/v1.0/cve/" + ids, function(data, response){
 			if(data != undefined) {
 				callback(undefined, data);
 			}
