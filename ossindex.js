@@ -39,34 +39,37 @@ var client = new RestClient();
 
 module.exports = {
 	
-	/**
-	 * Get artifacts in bulk. Currently this is not supported by the API,
-	 * so fake it for now.
+	/** POST /v1.0/search/artifact/
+	 * 
+	 *   [{"pm": "<pm>", "name": "<name>", "version": "<version>"} [, ...]]
+	 * 
+	 * Get artifacts in bulk.
 	 * 
 	 * If an artifact cannot be found it leaves a null in the result array
 	 * 
 	 * 
 	 */
 	getNpmArtifacts: function (names, versions, callback, results) {
-		var that = this;
-		if(results == undefined) {
-			results = [];
-			// Make sure we don't edit the original arrays
-			names = names.slice(0);
-			versions = versions.slice(0);
+		
+		var data = [];
+		
+		for(var i = 0; i < names.length; i++) {
+			data.push({"pm": "npm", "name": names[i], "version": versions[i]});
 		}
-		if(names.length == 0) {
-			callback(undefined, results);
-			return;
-		}
-		var name = names.shift();
-		var version = versions.shift();
-		this.getNpmArtifact(name, version, function(err, artifact) {
-			// Push bad results on as well (undefined). This allows
-			// the caller to determine which queries return good
-			// results.
-			results.push(artifact);
-			that.getNpmArtifacts(names, versions, callback, results);
+		
+		var args = {
+			data: data,
+			headers:{"Content-Type": "application/json"}
+		};
+		
+		var query = ossindex + "/v1.0/search/artifact/";
+		client.post(query, args, function(data, response){
+			if(data != undefined && data.length > 0) {
+				callback(undefined, data);
+			}
+			else {
+				callback();
+			}
 		});
 	},
 	
