@@ -49,12 +49,12 @@ module.exports = {
 	 * 
 	 * 
 	 */
-	getNpmArtifacts: function (names, versions, callback, results) {
+	getNpmArtifacts: function (pkgs, callback, results) {
 		
 		var data = [];
 		
-		for(var i = 0; i < names.length; i++) {
-			data.push({"pm": "npm", "name": names[i], "version": versions[i]});
+		for(var i = 0; i < pkgs.length; i++) {
+			data.push({"pm": "npm", "name": pkgs[i].name, "version": pkgs[i].version});
 		}
 		
 		var args = {
