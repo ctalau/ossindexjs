@@ -47,9 +47,10 @@ module.exports = {
 	 * 
 	 * If an artifact cannot be found it leaves a null in the result array
 	 * 
-	 * 
+	 * @param pkgs An array of {name: pkgName, version: pkgVersion} objects
+	 * @callback to call on completion
 	 */
-	getNpmArtifacts: function (pkgs, callback, results) {
+	getNpmArtifacts: function (pkgs, callback) {
 		
 		var data = [];
 		
@@ -76,9 +77,12 @@ module.exports = {
 	/** GET /v1.0/search/artifact/npm/:name/:range
 	 * 
 	 * Return the artifact that best matches the given package/range
+	 * 
+	 * @param pkgs A package object: {name: pkgName, version: pkgVersion}
+	 * @callback to call on completion
 	 */
-	getNpmArtifact: function (name, version, callback) {
-		var query = ossindex + "/v1.0/search/artifact/npm/" + name + "/" + version;
+	getNpmArtifact: function (pkg, callback) {
+		var query = ossindex + "/v1.0/search/artifact/npm/" + pkg.name + "/" + pkg.version;
 		client.get(query, function(data, response){
 			if(data != undefined && data.length > 0) {
 				callback(undefined, data[0]);
@@ -92,6 +96,9 @@ module.exports = {
 	/** GET /v1.0/scm/:id
 	 * 
 	 * Return the SCM details for the SCM with the specified OSS Index ID.
+	 * 
+	 * @param List of SCM OSSIndex IDs
+	 * @callback to call on completion
 	 */
 	getScms: function (scmIds, callback) {
 		var list = scmIds.join(",");
@@ -108,6 +115,9 @@ module.exports = {
 	/** GET /v1.0/uri/:host/:path
 	 * 
 	 * Return the SCM details for the SCM with the specified OSS Index ID.
+	 * 
+	 * @param uri An SCM URI (eg. https://github.com/jquery/jquery.git)
+	 * @callback to call on completion
 	 */
 	getScmByUri: function (uri, callback) {
 		var index = uri.indexOf("://");
@@ -124,8 +134,9 @@ module.exports = {
 	
 	/** Given a list of CPE URIs, return a list of CPE details.
 	 * 
-	 * @param cpeList
-	 * @param callback
+	 * @param cpeList List of CPE URIs in the form cpe:/part/vendor/product
+	 * @callback to call on completion
+	 * @param results (internal use only)
 	 */
 	getCpeListDetails: function (cpeList, callback, results) {
 		var that = this;
@@ -152,6 +163,9 @@ module.exports = {
 	/** Given a CPE URI, fetch the CPE details
 	 *  
 	 *  A CPE URI looks like this: cpe:/part/vendor/product
+	 *  
+	 * @param cpe A CPE URI in the form cpe:/part/vendor/product
+	 * @callback to call on completion
 	 */
 	getCpeFromUri: function (cpe, callback) {
 		var cpeId = cpe.substring(5);
@@ -162,6 +176,11 @@ module.exports = {
 	/** GET /v1.0/cpe/:part/:vendor/:product
 	 * 
 	 * Given a part, vendor, and product, return the CPE details.
+	 * 
+	 * @param part field of a CPE (exact match required)
+	 * @param vendor field of a CPE (exact match required)
+	 * @param product field of a CPE (exact match required)
+	 * @callback to call on completion
 	 */
 	getCpe: function (part, vendor, product, callback) {
 		client.get(ossindex + "/v1.0/cpe/" + part + "/" + vendor + "/" + product, function(data, response){
@@ -182,14 +201,13 @@ module.exports = {
 	 *   o Impact information
 	 *   o Affected CPEs with versions
 	 *   o Reference information
+	 * 
+	 * @param cveIdList A list of CVE OSS Index Ids
+	 * @callback to call on completion
 	 */
-	getCves: function (cveIdList, callback, results) {
-		var that = this;
-		if(results == undefined) {
-			results = [];
-		}
+	getCves: function (cveIdList, callback) {
 		if(cveIdList.length == 0) {
-			callback(undefined, results);
+			callback(undefined, []);
 		}
 		
 		var ids = cveIdList.join(",");
