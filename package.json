@@ -1,6 +1,6 @@
 {
   "name": "ossindexjs",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "OSS Index API for node.js",
   "main": "ossindex.js",
   "scripts": {

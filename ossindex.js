@@ -65,11 +65,11 @@ module.exports = {
 		
 		var query = ossindex + "/v1.0/search/artifact/";
 		client.post(query, args, function(data, response){
-			if(data != undefined && data.length > 0) {
+			if(data != undefined) {
 				callback(undefined, data);
 			}
 			else {
-				callback();
+				callback(undefined, []);
 			}
 		});
 	},
