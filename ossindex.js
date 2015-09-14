@@ -100,9 +100,21 @@ module.exports = {
 	 * @param List of SCM OSSIndex IDs
 	 * @callback to call on completion
 	 */
-	getScms: function (scmIds, callback) {
+	getScms: function (scmIds, options, callback) {
+		if(typeof options == "function" && callback == undefined) {
+			callback = options;
+			options = undefined;
+		}
 		var list = scmIds.join(",");
-		client.get(ossindex + "/v1.0/scm/" + list, function(data, response){
+		var query = ossindex + "/v1.0/scm/" + list;
+		
+		if(options != null) {
+			query += "?";
+			Object.keys(options).forEach(function(key) {
+				query += key + "=" + options[key] + "&";
+			});
+		}
+		client.get(query, function(data, response){
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -123,6 +135,22 @@ module.exports = {
 		var index = uri.indexOf("://");
 		var uriHostPath = uri.substring(index + 3, uri.length);
 		client.get(ossindex + "/v1.0/uri/" + uriHostPath, function(data, response){
+			if(data != undefined) {
+				callback(undefined, data);
+			}
+			else {
+				callback();
+			}
+		});
+	},
+	
+	/** Given an SCM id, return a list of related CVEs
+	 * 
+	 * @param
+	 */
+	getScmVulnerabilities: function(scmId, callback) {
+		var query = ossindex + "/v1.0/scm/" + scmId + "/vulnerabilities";
+		client.get(query, function(data, response){
 			if(data != undefined) {
 				callback(undefined, data);
 			}
