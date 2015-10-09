@@ -65,6 +65,21 @@ module.exports = {
 		
 		var query = ossindex + "/v1.0/search/artifact/";
 		client.post(query, args, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -84,6 +99,21 @@ module.exports = {
 	getNpmArtifact: function (pkg, callback) {
 		var query = ossindex + "/v1.0/search/artifact/npm/" + pkg.name + "/" + pkg.version;
 		client.get(query, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined && data.length > 0) {
 				callback(undefined, data[0]);
 			}
@@ -115,6 +145,21 @@ module.exports = {
 			});
 		}
 		client.get(query, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -135,6 +180,21 @@ module.exports = {
 		var index = uri.indexOf("://");
 		var uriHostPath = uri.substring(index + 3, uri.length);
 		client.get(ossindex + "/v1.0/uri/" + uriHostPath, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -151,6 +211,21 @@ module.exports = {
 	getScmVulnerabilities: function(scmId, callback) {
 		var query = ossindex + "/v1.0/scm/" + scmId + "/vulnerabilities";
 		client.get(query, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -212,6 +287,21 @@ module.exports = {
 	 */
 	getCpe: function (part, vendor, product, callback) {
 		client.get(ossindex + "/v1.0/cpe/" + part + "/" + vendor + "/" + product, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
@@ -240,6 +330,21 @@ module.exports = {
 		
 		var ids = cveIdList.join(",");
 		client.get(ossindex + "/v1.0/cve/" + ids, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
 			if(data != undefined) {
 				callback(undefined, data);
 			}
