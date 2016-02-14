@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2015 Vör Security Inc.
+ *	Copyright (c) 2015-2016 Vör Security Inc.
  *	All rights reserved.
  *	
  *	Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ var client = new RestClient();
 
 module.exports = {
 	
-	/** POST /v1.0/search/artifact/
+	/** POST /v1.1/search/artifact/
 	 * 
 	 *   [{"pm": "<pm>", "name": "<name>", "version": "<version>"} [, ...]]
 	 * 
@@ -63,7 +63,7 @@ module.exports = {
 			headers:{"Content-Type": "application/json"}
 		};
 		
-		var query = ossindex + "/v1.0/search/artifact/";
+		var query = ossindex + "/v1.1/search/artifact/";
 		client.post(query, args, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
@@ -89,7 +89,7 @@ module.exports = {
 		});
 	},
 	
-	/** GET /v1.0/search/artifact/npm/:name/:range
+	/** GET /v1.1/search/artifact/npm/:name/:range
 	 * 
 	 * Return the artifact that best matches the given package/range
 	 * 
@@ -97,7 +97,7 @@ module.exports = {
 	 * @callback to call on completion
 	 */
 	getNpmArtifact: function (pkg, callback) {
-		var query = ossindex + "/v1.0/search/artifact/npm/" + pkg.name + "/" + pkg.version;
+		var query = ossindex + "/v1.1/search/artifact/npm/" + pkg.name + "/" + pkg.version;
 		client.get(query, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
@@ -123,7 +123,7 @@ module.exports = {
 		});
 	},
 	
-	/** GET /v1.0/scm/:id
+	/** GET /v1.1/scm/:id
 	 * 
 	 * Return the SCM details for the SCM with the specified OSS Index ID.
 	 * 
@@ -136,7 +136,7 @@ module.exports = {
 			options = undefined;
 		}
 		var list = scmIds.join(",");
-		var query = ossindex + "/v1.0/scm/" + list;
+		var query = ossindex + "/v1.1/scm/" + list;
 		
 		if(options != null) {
 			query += "?";
@@ -169,7 +169,7 @@ module.exports = {
 		});
 	},
 	
-	/** GET /v1.0/uri/:host/:path
+	/** GET /v1.1/uri/:host/:path
 	 * 
 	 * Return the SCM details for the SCM with the specified OSS Index ID.
 	 * 
@@ -179,7 +179,53 @@ module.exports = {
 	getScmByUri: function (uri, callback) {
 		var index = uri.indexOf("://");
 		var uriHostPath = uri.substring(index + 3, uri.length);
-		client.get(ossindex + "/v1.0/uri/" + uriHostPath, function(data, response){
+		client.get(ossindex + "/v1.1/uri/" + uriHostPath, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
+			if(data != undefined) {
+				callback(undefined, data);
+			}
+			else {
+				callback();
+			}
+		});
+	},
+	
+	/** GET /v1.1/project/:id
+	 * 
+	 * Return the SCM details for the project with the specified OSS Index ID.
+	 * 
+	 * @param List of project OSSIndex IDs
+	 * @callback to call on completion
+	 */
+	getProjects: function (projectIds, options, callback) {
+		if(typeof options == "function" && callback == undefined) {
+			callback = options;
+			options = undefined;
+		}
+		var list = projectIds.join(",");
+		var query = ossindex + "/v1.1/project/" + list;
+		
+		if(options != null) {
+			query += "?";
+			Object.keys(options).forEach(function(key) {
+				query += key + "=" + options[key] + "&";
+			});
+		}
+		client.get(query, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
 				try {
@@ -209,7 +255,38 @@ module.exports = {
 	 * @param
 	 */
 	getScmVulnerabilities: function(scmId, callback) {
-		var query = ossindex + "/v1.0/scm/" + scmId + "/vulnerabilities";
+		var query = ossindex + "/v1.1/scm/" + scmId + "/vulnerabilities";
+		client.get(query, function(data, response){
+			// Handle the error response
+			if(response.statusCode < 200 || response.statusCode > 299) {
+				try {
+					var json = JSON.parse(data);
+					if(json != undefined && json.error != undefined){
+						callback(json);
+						return;
+					}
+				}
+				catch(err) {}
+				callback({error: "Server error", code: response.statusCode});
+				return;
+			}
+			
+			// Otherwise the data is considered good
+			if(data != undefined) {
+				callback(undefined, data);
+			}
+			else {
+				callback();
+			}
+		});
+	},
+	
+	/** Given a project id, return a list of related CVEs
+	 * 
+	 * @param
+	 */
+	getProjectVulnerabilities: function(projectId, callback) {
+		var query = ossindex + "/v1.1/project/" + projectId + "/vulnerabilities";
 		client.get(query, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
@@ -276,7 +353,7 @@ module.exports = {
 		this.getCpe(tokens[0], tokens[1], tokens[2], callback);
 	},
 	
-	/** GET /v1.0/cpe/:part/:vendor/:product
+	/** GET /v1.1/cpe/:part/:vendor/:product
 	 * 
 	 * Given a part, vendor, and product, return the CPE details.
 	 * 
@@ -286,7 +363,7 @@ module.exports = {
 	 * @callback to call on completion
 	 */
 	getCpe: function (part, vendor, product, callback) {
-		client.get(ossindex + "/v1.0/cpe/" + part + "/" + vendor + "/" + product, function(data, response){
+		client.get(ossindex + "/v1.1/cpe/" + part + "/" + vendor + "/" + product, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
 				try {
@@ -311,7 +388,7 @@ module.exports = {
 		});
 	},
 	
-	/** GET /v1.0/cve/:id
+	/** GET /v1.1/cve/:id
 	 * 
 	 * Given a CVE OSS Index ID, get all of the details which includes but
 	 * is not limited to
@@ -329,7 +406,7 @@ module.exports = {
 		}
 		
 		var ids = cveIdList.join(",");
-		client.get(ossindex + "/v1.0/cve/" + ids, function(data, response){
+		client.get(ossindex + "/v1.1/cve/" + ids, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
 				try {
