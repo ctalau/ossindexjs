@@ -256,29 +256,7 @@ module.exports = {
 	 */
 	getScmVulnerabilities: function(scmId, callback) {
 		var query = ossindex + "/v1.1/scm/" + scmId + "/vulnerabilities";
-		client.get(query, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
+		this.getVulnerabilityList(query, callback);
 	},
 	
 	/** Given a project id, return a list of related CVEs
@@ -287,29 +265,42 @@ module.exports = {
 	 */
 	getProjectVulnerabilities: function(projectId, callback) {
 		var query = ossindex + "/v1.1/project/" + projectId + "/vulnerabilities";
-		client.get(query, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
+		this.getVulnerabilityList(query, callback);
+	},
+	
+	/** Given a vulnerability URL, collect the vulnerabilities
+	 * 
+	 * @param
+	 */
+	getVulnerabilityList: function(query, callback) {
+		if(query != undefined) {
+			client.get(query, function(data, response){
+				// Handle the error response
+				if(response.statusCode < 200 || response.statusCode > 299) {
+					try {
+						var json = JSON.parse(data);
+						if(json != undefined && json.error != undefined){
+							callback(json);
+							return;
+						}
 					}
+					catch(err) {}
+					callback({error: "Server error", code: response.statusCode});
+					return;
 				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
+				
+				// Otherwise the data is considered good
+				if(data != undefined) {
+					callback(undefined, data);
+				}
+				else {
+					callback();
+				}
+			});
+		}
+		else {
+			callback();
+		}
 	},
 	
 	/** Given a list of CPE URIs, return a list of CPE details.
