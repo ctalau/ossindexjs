@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2015-2016 Vör Security Inc.
+ *	Copyright (c) 2015-2017 Vör Security Inc.
  *	All rights reserved.
  *	
  *	Redistribution and use in source and binary forms, with or without
@@ -39,23 +39,24 @@ var client = new RestClient();
 
 module.exports = {
 	
-	/** POST /v1.1/search/artifact/
+	/** POST /v2.0/package
 	 * 
-	 *   [{"pm": "<pm>", "name": "<name>", "version": "<version>"} [, ...]]
+	 *	[
+	 *	    {"pm": ":pm", "name": ":packageName1"},
+	 *	    {"pm": ":pm", "name": ":packageName2"},
+	 *	    ...
+	 *	] 
+	 * Get packages and their vulnerabilities in bulk.
 	 * 
-	 * Get artifacts in bulk.
-	 * 
-	 * If an artifact cannot be found it leaves a null in the result array
-	 * 
-	 * @param pkgs An array of {name: pkgName, version: pkgVersion} objects
+	 * @param pkgs An array of {pm: package manager, name: package name} objects
 	 * @callback to call on completion
 	 */
-	getNpmArtifacts: function (pkgs, callback) {
+	getPackageData: function (pkgs, callback) {
 		
 		var data = [];
 		
 		for(var i = 0; i < pkgs.length; i++) {
-			data.push({"pm": "npm", "name": pkgs[i].name, "version": pkgs[i].version});
+			data.push({"pm": pkgs[i].pm, "name": pkgs[i].name});
 		}
 		
 		var args = {
@@ -63,7 +64,7 @@ module.exports = {
 			headers:{"Content-Type": "application/json"}
 		};
 		
-		var query = ossindex + "/v1.1/search/artifact/";
+		var query = ossindex + "/v2.0/package";
 		client.post(query, args, function(data, response){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
@@ -85,339 +86,6 @@ module.exports = {
 			}
 			else {
 				callback(undefined, []);
-			}
-		});
-	},
-	
-	/** GET /v1.1/search/artifact/npm/:name/:range
-	 * 
-	 * Return the artifact that best matches the given package/range
-	 * 
-	 * @param pkgs A package object: {name: pkgName, version: pkgVersion}
-	 * @callback to call on completion
-	 */
-	getNpmArtifact: function (pkg, callback) {
-		var query = ossindex + "/v1.1/search/artifact/npm/" + pkg.name + "/" + pkg.version;
-		client.get(query, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined && data.length > 0) {
-				callback(undefined, data[0]);
-			}
-			else {
-				callback();
-			}
-		});
-	},
-	
-	/** GET /v1.1/scm/:id
-	 * 
-	 * Return the SCM details for the SCM with the specified OSS Index ID.
-	 * 
-	 * @param List of SCM OSSIndex IDs
-	 * @callback to call on completion
-	 */
-	getScms: function (scmIds, options, callback) {
-		if(typeof options == "function" && callback == undefined) {
-			callback = options;
-			options = undefined;
-		}
-		var list = scmIds.join(",");
-		var query = ossindex + "/v1.1/scm/" + list;
-		
-		if(options != null) {
-			query += "?";
-			Object.keys(options).forEach(function(key) {
-				query += key + "=" + options[key] + "&";
-			});
-		}
-		client.get(query, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
-	},
-	
-	/** GET /v1.1/uri/:host/:path
-	 * 
-	 * Return the SCM details for the SCM with the specified OSS Index ID.
-	 * 
-	 * @param uri An SCM URI (eg. https://github.com/jquery/jquery.git)
-	 * @callback to call on completion
-	 */
-	getScmByUri: function (uri, callback) {
-		var index = uri.indexOf("://");
-		var uriHostPath = uri.substring(index + 3, uri.length);
-		client.get(ossindex + "/v1.1/uri/" + uriHostPath, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
-	},
-	
-	/** GET /v1.1/project/:id
-	 * 
-	 * Return the SCM details for the project with the specified OSS Index ID.
-	 * 
-	 * @param List of project OSSIndex IDs
-	 * @callback to call on completion
-	 */
-	getProjects: function (projectIds, options, callback) {
-		if(typeof options == "function" && callback == undefined) {
-			callback = options;
-			options = undefined;
-		}
-		var list = projectIds.join(",");
-		var query = ossindex + "/v1.1/project/" + list;
-		
-		if(options != null) {
-			query += "?";
-			Object.keys(options).forEach(function(key) {
-				query += key + "=" + options[key] + "&";
-			});
-		}
-		client.get(query, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
-	},
-	
-	/** Given an SCM id, return a list of related CVEs
-	 * 
-	 * @param
-	 */
-	getScmVulnerabilities: function(scmId, callback) {
-		var query = ossindex + "/v1.1/scm/" + scmId + "/vulnerabilities";
-		this.getVulnerabilityList(query, callback);
-	},
-	
-	/** Given a project id, return a list of related CVEs
-	 * 
-	 * @param
-	 */
-	getProjectVulnerabilities: function(projectId, callback) {
-		var query = ossindex + "/v1.1/project/" + projectId + "/vulnerabilities";
-		this.getVulnerabilityList(query, callback);
-	},
-	
-	/** Given a vulnerability URL, collect the vulnerabilities
-	 * 
-	 * @param
-	 */
-	getVulnerabilityList: function(query, callback) {
-		if(query != undefined) {
-			client.get(query, function(data, response){
-				// Handle the error response
-				if(response.statusCode < 200 || response.statusCode > 299) {
-					try {
-						var json = JSON.parse(data);
-						if(json != undefined && json.error != undefined){
-							callback(json);
-							return;
-						}
-					}
-					catch(err) {}
-					callback({error: "Server error", code: response.statusCode});
-					return;
-				}
-				
-				// Otherwise the data is considered good
-				if(data != undefined) {
-					callback(undefined, data);
-				}
-				else {
-					callback();
-				}
-			});
-		}
-		else {
-			callback();
-		}
-	},
-	
-	/** Given a list of CPE URIs, return a list of CPE details.
-	 * 
-	 * @param cpeList List of CPE URIs in the form cpe:/part/vendor/product
-	 * @callback to call on completion
-	 * @param results (internal use only)
-	 */
-	getCpeListDetails: function (cpeList, callback, results) {
-		var that = this;
-		if(results == undefined) {
-			results = [];
-		}
-		if(cpeList.length == 0) {
-			callback(undefined, results);
-		}
-		else {
-			var cpe = cpeList.shift();
-			this.getCpeFromUri(cpe, function(err, cpes) {
-				if(err) {
-					callback(err);
-				}
-				if(cpes != undefined) {
-					results = results.concat(cpes);
-				}
-				that.getCpeListDetails(cpeList, callback, results);
-			});
-		}
-	},
-	
-	/** Given a CPE URI, fetch the CPE details
-	 *  
-	 *  A CPE URI looks like this: cpe:/part/vendor/product
-	 *  
-	 * @param cpe A CPE URI in the form cpe:/part/vendor/product
-	 * @callback to call on completion
-	 */
-	getCpeFromUri: function (cpe, callback) {
-		var cpeId = cpe.substring(5);
-		var tokens = cpeId.split(":");
-		this.getCpe(tokens[0], tokens[1], tokens[2], callback);
-	},
-	
-	/** GET /v1.1/cpe/:part/:vendor/:product
-	 * 
-	 * Given a part, vendor, and product, return the CPE details.
-	 * 
-	 * @param part field of a CPE (exact match required)
-	 * @param vendor field of a CPE (exact match required)
-	 * @param product field of a CPE (exact match required)
-	 * @callback to call on completion
-	 */
-	getCpe: function (part, vendor, product, callback) {
-		client.get(ossindex + "/v1.1/cpe/" + part + "/" + vendor + "/" + product, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
-			}
-		});
-	},
-	
-	/** GET /v1.1/cve/:id
-	 * 
-	 * Given a CVE OSS Index ID, get all of the details which includes but
-	 * is not limited to
-	 *   o Score
-	 *   o Impact information
-	 *   o Affected CPEs with versions
-	 *   o Reference information
-	 * 
-	 * @param cveIdList A list of CVE OSS Index Ids
-	 * @callback to call on completion
-	 */
-	getCves: function (cveIdList, callback) {
-		if(cveIdList.length == 0) {
-			callback(undefined, []);
-		}
-		
-		var ids = cveIdList.join(",");
-		client.get(ossindex + "/v1.1/cve/" + ids, function(data, response){
-			// Handle the error response
-			if(response.statusCode < 200 || response.statusCode > 299) {
-				try {
-					var json = JSON.parse(data);
-					if(json != undefined && json.error != undefined){
-						callback(json);
-						return;
-					}
-				}
-				catch(err) {}
-				callback({error: "Server error", code: response.statusCode});
-				return;
-			}
-			
-			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
-			}
-			else {
-				callback();
 			}
 		});
 	}
