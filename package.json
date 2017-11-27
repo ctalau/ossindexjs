@@ -22,6 +22,6 @@
   },
   "homepage": "https://github.com/OSSIndex/ossindexjs#readme",
   "dependencies": {
-    "node-rest-client": "^1.5.1"
+    "request": "^2.83.0"
   }
 }

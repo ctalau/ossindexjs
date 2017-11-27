@@ -26,16 +26,13 @@
  */
 
 // Provides simplified REST API access
-var RestClient = require('node-rest-client').Client;
+var client = require('request');
 
 //RELEASE HOST
 var ossindex = "https://ossindex.net";
 
 //DEBUG HOST
 //var ossindex = "http://localhost:8080";
-
-//Instantiate the rest client
-var client = new RestClient();
 
 module.exports = {
 	
@@ -60,16 +57,15 @@ module.exports = {
 		}
 		
 		var args = {
-			data: data,
-			headers:{"Content-Type": "application/json"}
+			body: data,
+			json: true
 		};
 		
 		var query = ossindex + "/v2.0/package";
-		client.post(query, args, function(data, response){
+		client.post(query, args, function(error, response, json){
 			// Handle the error response
 			if(response.statusCode < 200 || response.statusCode > 299) {
 				try {
-					var json = JSON.parse(data);
 					if(json != undefined && json.error != undefined){
 						callback(json);
 						return;
@@ -81,8 +77,8 @@ module.exports = {
 			}
 			
 			// Otherwise the data is considered good
-			if(data != undefined) {
-				callback(undefined, data);
+			if(json != undefined) {
+				callback(undefined, json);
 			}
 			else {
 				callback(undefined, []);
